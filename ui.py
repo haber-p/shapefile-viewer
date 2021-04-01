@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from map import ShpMap
+from map import *
 
 
 class ShpViewerUI(QMainWindow):
@@ -26,7 +26,7 @@ class ShpViewerUI(QMainWindow):
             'selectFile': QPushButton('...'),
             'load': QPushButton('Load'),
             'export': QPushButton('Export'),
-            'confirm': QPushButton('OK')
+            'filter': QPushButton('Filter')
         }
 
     def _createFileLoader(self):
@@ -66,10 +66,17 @@ class ShpViewerUI(QMainWindow):
         optionsLayout.addWidget(self.axesNo)
         optionsLayout.addWidget((QLabel("Base map:")))
         optionsLayout.addWidget(self.basemap)
-        optionsLayout.addWidget(self.buttons['confirm'])
+
+        self.mapAttributes = QComboBox()
+        optionsLayout.addWidget(QLabel("Filter by attribute:"))
+        optionsLayout.addWidget(self.mapAttributes)
+        optionsLayout.addWidget((QLabel("Condition:")))
+        self.filterLine = QLineEdit()
+        self.filterLine.setFixedSize(150, 25)
+        optionsLayout.addWidget(self.filterLine)
+        optionsLayout.addWidget(self.buttons['filter'])
 
         self.managerLayout = QHBoxLayout()
-
         self.managerLayout.addLayout(optionsLayout)
 
         # display map
@@ -93,26 +100,33 @@ class ShpViewerUI(QMainWindow):
         self.pathLine.setText(path)
 
     def chooseFile(self):
-        fileName,filter = QFileDialog.getOpenFileName(self,filter="(*.shp)")
+        fileName,filter = QFileDialog.getOpenFileName(self, filter="(*.shp)")
         self._setPath(fileName)
         print(self.path)
 
-    def updateMap(self, **kwargs):
+    def updateMap(self, filter=None, **kwargs):
         if hasattr(self, "path"):
             self.statusBar().showMessage("Map updating... Please wait")
-            newMap = ShpMap(self.path, **kwargs)
+            if filter:
+                newMap = ShpMap.filterMap(self.path, filter=filter, **kwargs)
+            else:
+                newMap = ShpMap.createNew(self.path, **kwargs)
             self.managerLayout.replaceWidget(self.map, newMap)
             self.map = newMap
             self.statusBar().showMessage("Map updated successfully", 3000)
+            attributes = self.map.getColNames()
+            self.mapAttributes.clear()
+            self.mapAttributes.addItems(attributes)
         else:
             self.statusBar().showMessage("Choose a file first")
+
+    def changeColors(self, **kwargs):
+        newMap = self.map.update(**kwargs)
+        self.managerLayout.replaceWidget(self.map, newMap)
+        self.map = newMap
 
     def exportMap(self):
         if hasattr(self,"path"):
             self.map.exportMap()
         else:
             self.statusBar().showMessage("Choose a file first")
-
-
-
-

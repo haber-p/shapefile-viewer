@@ -1,5 +1,6 @@
 import re
 
+
 class ShpViewerCtrl:
 
     def __init__(self, view):
@@ -10,7 +11,7 @@ class ShpViewerCtrl:
         self._view.buttons['selectFile'].clicked.connect(lambda: self._view.chooseFile())
         self._view.buttons['load'].clicked.connect(lambda: self._view.updateMap())
         self._view.buttons['export'].clicked.connect(lambda: self._view.exportMap())
-        self._view.buttons['confirm'].clicked.connect(lambda: self._view.updateMap(filling=self.getFillingCol(), boundaries=self.getBoundariesCol(), title=self.getTitle(), axes=self.getAxes(), basemap=self.getBaseMap()))
+        self._view.buttons['filter'].clicked.connect(lambda: self._view.updateMap(filter=self.getCondition(),filling=self.getFillingCol(), boundaries=self.getBoundariesCol(), title=self.getTitle(), axes=self.getAxes(), basemap=self.getBaseMap()))
 
     def getFillingCol(self):
         color = self._view.colorLine.text()
@@ -35,6 +36,16 @@ class ShpViewerCtrl:
         if basemap is "None":
             basemap = None
         return basemap
+
+    def getCondition(self):
+        if hasattr(self._view, "path"):
+            attribute = str(self._view.mapAttributes.currentText())
+            condition = self._view.filterLine.text()
+            if condition != "":
+                filter = [attribute, condition]
+                return filter
+        else:
+            return None
 
 
 hexColor = "^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$"
